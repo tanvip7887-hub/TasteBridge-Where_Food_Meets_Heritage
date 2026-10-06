@@ -1,0 +1,31 @@
+import React from "react";
+import { useSelector } from "react-redux";
+import { Sparkles, CheckCircle } from "lucide-react";
+
+export const OnboardingPage = () => {
+  const { user } = useSelector((state) => state.auth);
+
+  return (
+    <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
+      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 mb-4">
+          <Sparkles className="w-8 h-8" />
+        </div>
+        <div className="flex items-center gap-2 mb-2">
+          <CheckCircle className="w-5 h-5 text-emerald-600" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+            Email Verified
+          </span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          TasteBridge Onboarding
+        </h1>
+        <p className="text-sm text-gray-600 mb-6">
+          Welcome to TasteBridge{user?.name ? `, ${user.name}` : ""}! Your account is active. Onboarding preferences and setup will be implemented here soon.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default OnboardingPage;

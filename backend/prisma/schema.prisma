@@ -1,0 +1,144 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  CUSTOMER
+  COOK
+  DELIVERY_AGENT
+  ADMIN
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NEEDS_REVISION
+}
+
+enum DocumentType {
+  IDENTITY_PROOF
+  FSSAI_LICENSE
+  DRIVING_LICENSE
+  VEHICLE_REGISTRATION
+  HEALTH_CERTIFICATE
+  OTHER
+}
+
+model User {
+  id                    String                 @id @default(cuid())
+  name                  String
+  email                 String                 @unique
+  phone                 String?                @unique
+  passwordHash          String
+  role                  UserRole               @default(CUSTOMER)
+  status                AccountStatus          @default(ACTIVE)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  cookProfile           CookProfile?
+  deliveryAgent         DeliveryAgent?
+  verificationDocuments VerificationDocument[]
+  addresses             Address[]
+
+  @@index([email])
+  @@index([role])
+  @@index([phone])
+}
+
+model PendingRegistration {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String
+  phone            String?
+  passwordHash     String
+  otpHash          String
+  expiresAt        DateTime
+  attempts         Int       @default(0)
+  resendAllowedAt  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([email])
+}
+
+model CookProfile {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName       String
+  bio                String?            @db.Text
+  specialization     String?
+  verificationStatus VerificationStatus @default(PENDING)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+model DeliveryAgent {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType        String?
+  licenseNumber      String?
+  verificationStatus VerificationStatus @default(PENDING)
+  isAvailable        Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+model VerificationDocument {
+  id                 String             @id @default(cuid())
+  userId             String
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentType       DocumentType
+  documentUrl        String
+  verificationStatus VerificationStatus @default(PENDING)
+  rejectionReason    String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([documentType])
+}
+
+model Address {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label        String?
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  pincode      String
+  landmark     String?
+  isDefault    Boolean  @default(false)
+  latitude     Float?
+  longitude    Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model PlatformSettings {
+  id                 String   @id @default("default")
+  platformFeePercent Float    @default(10.0)
+  deliveryFeeBase    Float    @default(30.0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
