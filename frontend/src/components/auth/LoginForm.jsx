@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,7 +12,7 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-export const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
+export const LoginForm = ({ onSuccess, onSwitchToRegister, onSwitchToForgotPassword }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.auth);
   const [serverError, setServerError] = useState("");
@@ -33,6 +34,15 @@ export const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
     } else if (loginUser.rejected.match(result)) {
       const err = result.payload;
       setServerError(err?.message || "Invalid credentials. Please try again.");
+    }
+  };
+
+  const handleForgotPasswordClick = (e) => {
+    if (onSwitchToForgotPassword) {
+      e.preventDefault();
+      onSwitchToForgotPassword();
+    } else if (onSuccess) {
+      onSuccess();
     }
   };
 
@@ -74,9 +84,18 @@ export const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-700 mb-1">
-            Password
-          </label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs font-semibold text-gray-700">
+              Password
+            </label>
+            <Link
+              to="/forgot-password"
+              onClick={handleForgotPasswordClick}
+              className="text-xs font-medium text-red-600 hover:text-red-700 hover:underline cursor-pointer"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative">
             <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
             <input

@@ -6,6 +6,10 @@ import MainLayout from "../layouts/MainLayout.jsx";
 import LandingPage from "../pages/LandingPage.jsx";
 import HomePage from "../pages/HomePage.jsx";
 import OnboardingPage from "../pages/OnboardingPage.jsx";
+import PlaceholderPage from "../pages/PlaceholderPage.jsx";
+import Profile from "../pages/Profile.jsx";
+import ForgotPasswordPage from "../pages/ForgotPasswordPage.jsx";
+import ResetPasswordPage from "../pages/ResetPasswordPage.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 
 export const AppRoutes = () => {
@@ -25,6 +29,10 @@ export const AppRoutes = () => {
           element={isAuthenticated ? <HomePage /> : <LandingPage />}
         />
 
+        {/* Public Unauthenticated Password Reset Routes */}
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="reset-password/:token" element={<ResetPasswordPage />} />
+
         {/* User Onboarding Route */}
         <Route
           path="onboarding"
@@ -35,7 +43,7 @@ export const AppRoutes = () => {
           }
         />
 
-        {/* Protected Dashboard/Profile Route */}
+        {/* Protected Dashboard Route */}
         <Route
           path="dashboard"
           element={
@@ -44,6 +52,22 @@ export const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* Navigation & Stub Routes */}
+        <Route path="explore" element={<PlaceholderPage />} />
+        <Route path="become-a-cook" element={<PlaceholderPage />} />
+        <Route path="become-a-delivery-agent" element={<PlaceholderPage />} />
+        <Route path="cart" element={<PlaceholderPage />} />
+        <Route
+          path="profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="orders" element={<PlaceholderPage />} />
+        <Route path="favourites" element={<PlaceholderPage />} />
 
         {/* Fallback Route */}
         <Route

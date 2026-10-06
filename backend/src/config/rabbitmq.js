@@ -1,7 +1,7 @@
 import amqp from "amqplib";
 import env from "./env.js";
 import { logger } from "../utils/logger.js";
-import { isSmtpConfigured, sendVerificationEmail } from "../services/email.service.js";
+import { isSmtpConfigured, sendVerificationEmail, sendPasswordResetEmail, sendPasswordResetOtpEmail } from "../services/email.service.js";
 
 export const QUEUES = {
   EMAIL: env.RABBITMQ_EMAIL_QUEUE || "tastebridge.email",
@@ -69,6 +69,12 @@ export const publishEmailJob = async (jobData) => {
       logger.warn(
         `[RabbitMQ Offline] RabbitMQ is unavailable. Falling back to direct SMTP email delivery for: ${jobData.to}`
       );
+      if (jobData.type === "PASSWORD_RESET_OTP") {
+        return await sendPasswordResetOtpEmail(jobData);
+      }
+      if (jobData.type === "PASSWORD_RESET") {
+        return await sendPasswordResetEmail(jobData);
+      }
       return await sendVerificationEmail(jobData);
     } else {
       const errorMsg =

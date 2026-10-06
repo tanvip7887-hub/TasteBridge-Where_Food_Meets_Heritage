@@ -4,6 +4,9 @@ import {
   resendRegisterOtp,
   loginUser,
   getUserById,
+  forgotPassword as forgotPasswordService,
+  verifyResetOtp as verifyResetOtpService,
+  resetPassword as resetPasswordService,
 } from "./auth.service.js";
 import { sendSuccess } from "../../utils/apiResponse.js";
 import { HTTP_STATUS } from "../../constants/index.js";
@@ -72,6 +75,48 @@ export const getMe = async (req, res, next) => {
       HTTP_STATUS.OK,
       "Current user profile retrieved",
       user
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const result = await forgotPasswordService(req.body);
+    return sendSuccess(
+      res,
+      HTTP_STATUS.OK,
+      result.message,
+      result
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyResetOtp = async (req, res, next) => {
+  try {
+    const result = await verifyResetOtpService(req.body);
+    return sendSuccess(
+      res,
+      HTTP_STATUS.OK,
+      result.message,
+      result
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (req, res, next) => {
+  try {
+    const result = await resetPasswordService(req.body);
+    return sendSuccess(
+      res,
+      HTTP_STATUS.OK,
+      result.message,
+      null
     );
   } catch (error) {
     next(error);

@@ -3,6 +3,8 @@ import { connectRabbitMQ, QUEUES } from "../config/rabbitmq.js";
 import {
   verifySmtpConnection,
   sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendPasswordResetOtpEmail,
 } from "../services/email.service.js";
 import { logger } from "../utils/logger.js";
 
@@ -78,6 +80,32 @@ const startEmailWorker = async () => {
         channel.ack(msg);
         logger.info(
           `[Email Worker] Successfully delivered OTP email to ${jobData.to}`
+        );
+      } else if (jobData.type === "PASSWORD_RESET_OTP") {
+        await sendPasswordResetOtpEmail({
+          to: jobData.to,
+          name: jobData.name,
+          otp: jobData.otp,
+          expiresInMinutes: jobData.expiresInMinutes || 10,
+        });
+
+        // Acknowledge message on successful delivery
+        channel.ack(msg);
+        logger.info(
+          `[Email Worker] Successfully delivered password reset OTP email to ${jobData.to}`
+        );
+      } else if (jobData.type === "PASSWORD_RESET") {
+        await sendPasswordResetEmail({
+          to: jobData.to,
+          name: jobData.name,
+          resetUrl: jobData.resetUrl,
+          expiresInMinutes: jobData.expiresInMinutes || 15,
+        });
+
+        // Acknowledge message on successful delivery
+        channel.ack(msg);
+        logger.info(
+          `[Email Worker] Successfully delivered password reset email to ${jobData.to}`
         );
       } else {
         logger.warn(

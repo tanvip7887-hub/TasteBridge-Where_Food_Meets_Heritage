@@ -137,8 +137,175 @@ export const sendVerificationEmail = async ({
   }
 };
 
+// Send Password Reset Email
+export const sendPasswordResetEmail = async ({
+  to,
+  name,
+  resetUrl,
+  expiresInMinutes = 15,
+}) => {
+  if (!isSmtpConfigured()) {
+    const errMsg = "SMTP configuration is missing. Cannot deliver email.";
+    logger.error(`[Email Service] ${errMsg}`);
+    throw new Error(errMsg);
+  }
+
+  const transporter = createTransporter();
+  const from = env.SMTP_FROM;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 0; }
+          .container { max-width: 560px; margin: 30px auto; background: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+          .header { background: #dc2626; color: #ffffff; padding: 24px; text-align: center; }
+          .header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 0.5px; }
+          .header p { margin: 4px 0 0 0; font-size: 13px; opacity: 0.9; font-style: italic; }
+          .content { padding: 32px 24px; color: #374151; line-height: 1.6; }
+          .greeting { font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 12px; }
+          .btn-container { text-align: center; margin: 28px 0; }
+          .btn { display: inline-block; background-color: #dc2626; color: #ffffff !important; font-size: 16px; font-weight: 700; text-decoration: none; padding: 14px 32px; border-radius: 8px; box-shadow: 0 2px 6px rgba(220,38,38,0.25); }
+          .warning { font-size: 13px; color: #6b7280; margin-top: 24px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
+          .footer { background: #f9fafb; padding: 16px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #f3f4f6; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>TasteBridge</h1>
+            <p>Where Food Meets Heritage</p>
+          </div>
+          <div class="content">
+            <div class="greeting">Hello ${name || "TasteBridge Member"},</div>
+            <p><strong>Reset your password</strong></p>
+            <p>Someone requested a password reset for your TasteBridge account. If this was you, click the button below to set a new password:</p>
+            
+            <div class="btn-container">
+              <a href="${resetUrl}" class="btn" target="_blank">Yes, it's me</a>
+            </div>
+
+            <p>This password reset link will expire in <strong>${expiresInMinutes} minutes</strong>.</p>
+            
+            <div class="warning">
+              If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.
+            </div>
+          </div>
+          <div class="footer">
+            TasteBridge &bull; Where Food Meets Heritage
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const textContent = `TasteBridge\nWhere Food Meets Heritage\n\nReset your password\n\nSomeone requested a password reset for your TasteBridge account.\n\nClick the link below to reset your password:\n${resetUrl}\n\nThis link will expire in ${expiresInMinutes} minutes.\n\nIf you did not request a password reset, you can safely ignore this email.\n\nTasteBridge`;
+
+  try {
+    const info = await transporter.sendMail({
+      from,
+      to,
+      subject: "TasteBridge — Reset Your Password",
+      text: textContent,
+      html: htmlContent,
+    });
+
+    logger.info(`[Email Service] Password reset email sent to ${to} (MessageId: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    logger.error(`[Email Service] Failed to send password reset email to ${to}: ${error.message}`);
+    throw error;
+  }
+};
+
+// Send Password Reset OTP Email
+export const sendPasswordResetOtpEmail = async ({
+  to,
+  name,
+  otp,
+  expiresInMinutes = 10,
+}) => {
+  if (!isSmtpConfigured()) {
+    const errMsg = "SMTP configuration is missing. Cannot deliver email.";
+    logger.error(`[Email Service] ${errMsg}`);
+    throw new Error(errMsg);
+  }
+
+  const transporter = createTransporter();
+  const from = env.SMTP_FROM;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 0; }
+          .container { max-width: 560px; margin: 30px auto; background: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+          .header { background: #dc2626; color: #ffffff; padding: 24px; text-align: center; }
+          .header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 0.5px; }
+          .header p { margin: 4px 0 0 0; font-size: 13px; opacity: 0.9; font-style: italic; }
+          .content { padding: 32px 24px; color: #374151; line-height: 1.6; }
+          .greeting { font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 12px; }
+          .otp-box { background: #f3f4f6; border-radius: 8px; border: 1px dashed #d1d5db; padding: 20px; text-align: center; margin: 24px 0; }
+          .otp-code { font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #dc2626; margin: 0; }
+          .warning { font-size: 13px; color: #6b7280; margin-top: 24px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
+          .footer { background: #f9fafb; padding: 16px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #f3f4f6; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>TasteBridge</h1>
+            <p>Where Food Meets Heritage</p>
+          </div>
+          <div class="content">
+            <div class="greeting">Hello ${name || "Food Explorer"},</div>
+            <p>Your password reset code for TasteBridge is:</p>
+            
+            <div class="otp-box">
+              <div class="otp-code">${otp}</div>
+            </div>
+
+            <p>This password reset code expires in <strong>${expiresInMinutes} minutes</strong>.</p>
+            
+            <div class="warning">
+              If you did not request a password reset, you can safely ignore this email. Your account remains secure.
+            </div>
+          </div>
+          <div class="footer">
+            TasteBridge &bull; Where Food Meets Heritage
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const textContent = `TasteBridge\nWhere Food Meets Heritage\n\nYour password reset code:\n${otp}\n\nThis code expires in ${expiresInMinutes} minutes.\n\nIf you did not request a password reset, you can safely ignore this email.\n\nTasteBridge`;
+
+  try {
+    const info = await transporter.sendMail({
+      from,
+      to,
+      subject: "TasteBridge — Password Reset Verification Code",
+      text: textContent,
+      html: htmlContent,
+    });
+
+    logger.info(`[Email Service] Password reset OTP email sent to ${to} (MessageId: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    logger.error(`[Email Service] Failed to send password reset OTP email to ${to}: ${error.message}`);
+    throw error;
+  }
+};
+
 export default {
   isSmtpConfigured,
   verifySmtpConnection,
   sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendPasswordResetOtpEmail,
 };

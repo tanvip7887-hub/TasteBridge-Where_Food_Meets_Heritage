@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import LoginForm from "./LoginForm.jsx";
 import RegisterForm from "./RegisterForm.jsx";
+import ForgotPasswordForm from "./ForgotPasswordForm.jsx";
 
 export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
   const [mode, setMode] = useState(initialMode);
@@ -26,14 +27,23 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
 
         {/* Form Body */}
         <div className="p-6">
-          {mode === "login" ? (
+          {mode === "login" && (
             <LoginForm
               onSuccess={onClose}
               onSwitchToRegister={() => setMode("register")}
+              onSwitchToForgotPassword={() => setMode("forgot-password")}
             />
-          ) : (
+          )}
+
+          {mode === "register" && (
             <RegisterForm
               onSuccess={onClose}
+              onSwitchToLogin={() => setMode("login")}
+            />
+          )}
+
+          {mode === "forgot-password" && (
+            <ForgotPasswordForm
               onSwitchToLogin={() => setMode("login")}
             />
           )}

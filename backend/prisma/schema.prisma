@@ -54,6 +54,7 @@ model User {
   deliveryAgent         DeliveryAgent?
   verificationDocuments VerificationDocument[]
   addresses             Address[]
+  passwordResetTokens   PasswordResetToken[]
 
   @@index([email])
   @@index([role])
@@ -61,17 +62,17 @@ model User {
 }
 
 model PendingRegistration {
-  id               String    @id @default(cuid())
-  email            String    @unique
-  name             String
-  phone            String?
-  passwordHash     String
-  otpHash          String
-  expiresAt        DateTime
-  attempts         Int       @default(0)
-  resendAllowedAt  DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String
+  phone           String?
+  passwordHash    String
+  otpHash         String
+  expiresAt       DateTime
+  attempts        Int       @default(0)
+  resendAllowedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([email])
 }
@@ -141,4 +142,22 @@ model PlatformSettings {
   deliveryFeeBase    Float    @default(30.0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email           String    @unique
+  otpHash         String
+  resetTokenHash  String?   @unique
+  expiresAt       DateTime
+  attempts        Int       @default(0)
+  usedAt          DateTime?
+  resendAllowedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([email])
+  @@index([userId])
 }
